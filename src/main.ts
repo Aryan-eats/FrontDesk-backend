@@ -1,10 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
-import * as dotenv from 'dotenv';
-
-// Load environment variables
-dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -17,21 +13,13 @@ async function bootstrap() {
   });
   
   const port = configService.get<number>('PORT', 3000);
-  
-  // For Vercel deployment
-  if (process.env.VERCEL) {
-    await app.init();
-    return app;
-  }
-  
-  // For local development
   await app.listen(port);
   console.log(`Backend server running on http://localhost:${port}`);
-  console.log(`Database: ${configService.get<string>('DB_DATABASE', 'front_desk')}`);
-  console.log(`Environment: ${configService.get<string>('NODE_ENV', 'development')}`);
 }
 
-// Export for Vercel
-export default bootstrap();
+// For serverless deployment
+if (require.main === module) {
+  bootstrap();
+}
 
-bootstrap();
+export default bootstrap;
