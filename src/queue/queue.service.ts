@@ -63,10 +63,32 @@ export class QueueService {
   }
 
   async update(id: number, updateQueueDto: UpdateQueueDto): Promise<QueueEntity> {
+    console.log(`Queue Service: Updating queue item ${id} with data:`, updateQueueDto);
+    
     const queueItem = await this.findOne(id);
+    console.log(`Queue Service: Found queue item:`, queueItem);
+    
+    // Validate status transition if status is being updated
+    if (updateQueueDto.status) {
+      console.log(`Queue Service: Status transition from ${queueItem.status} to ${updateQueueDto.status}`);
+      
+      // Optional: Add business logic for valid status transitions
+      const validTransitions = {
+        'waiting': ['with-doctor', 'canceled'],
+        'with-doctor': ['completed', 'waiting', 'canceled'],
+        'completed': [], // Completed items cannot be changed
+        'canceled': ['waiting'] // Canceled items can be reactivated
+      };
+      
+      if (queueItem.status === 'completed' && updateQueueDto.status !== 'completed') {
+        console.warn(`Queue Service: Attempting to change completed item status`);
+        // Allow it but log warning
+      }
+    }
     
     Object.assign(queueItem, updateQueueDto);
-    await this.queueRepo.save(queueItem);
+    const savedItem = await this.queueRepo.save(queueItem);
+    console.log(`Queue Service: Successfully saved queue item:`, savedItem);
     
     // Update estimated wait times for all queue items
     await this.updateAllEstimatedWaitTimes();

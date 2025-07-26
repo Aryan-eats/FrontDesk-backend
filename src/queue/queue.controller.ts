@@ -11,6 +11,7 @@ import {
   HttpStatus,
   ParseIntPipe,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { QueueService } from './queue.service';
 import { CreateQueueDto, UpdateQueueDto } from './dto/queue.dto';
@@ -59,11 +60,29 @@ export class QueueController {
   }
 
   @Patch(':id/status')
-  updateStatus(
+  async updateStatus(
     @Param('id', ParseIntPipe) id: number,
     @Body('status') status: 'waiting' | 'with-doctor' | 'completed' | 'canceled'
   ) {
-    return this.queueService.update(id, { status });
+    console.log(`Queue Controller: Updating status for ID ${id} to ${status}`);
+    
+    if (!status) {
+      throw new BadRequestException('Status is required');
+    }
+    
+    const validStatuses = ['waiting', 'with-doctor', 'completed', 'canceled'];
+    if (!validStatuses.includes(status)) {
+      throw new BadRequestException(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+    }
+    
+    try {
+      const result = await this.queueService.update(id, { status });
+      console.log(`Queue Controller: Successfully updated status for ID ${id}`, result);
+      return result;
+    } catch (error) {
+      console.error(`Queue Controller: Error updating status for ID ${id}:`, error);
+      throw error;
+    }
   }
 
   @Patch(':id/complete')

@@ -30,6 +30,15 @@ import { QueueModule } from './queue/queue.module';
         synchronize: configService.get<string>('NODE_ENV') !== 'production',
         autoLoadEntities: true,
         logging: configService.get<string>('NODE_ENV') === 'development',
+        // Add connection pool and timeout settings for Railway
+        extra: {
+          connectionLimit: 10,
+          acquireTimeout: 60000,
+          timeout: 60000,
+          reconnect: true,
+        },
+        // Ensure SSL for Railway
+        ssl: configService.get<string>('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
       }),
     }),
     AuthModule,
