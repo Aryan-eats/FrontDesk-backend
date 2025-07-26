@@ -58,6 +58,14 @@ export class QueueController {
     return this.queueService.update(id, updateQueueDto);
   }
 
+  @Patch(':id/status')
+  updateStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('status') status: 'waiting' | 'with-doctor' | 'completed' | 'canceled'
+  ) {
+    return this.queueService.update(id, { status });
+  }
+
   @Patch(':id/complete')
   completePatient(@Param('id', ParseIntPipe) id: number) {
     return this.queueService.completePatient(id);
