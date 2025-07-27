@@ -3,9 +3,8 @@ export interface CreateDoctorDto {
   specialization: string;
   gender: string;
   location: string;
-  email?: string;
   phone?: string;
-  availability?: string;
+  availability?: { day: string; startTime: string; endTime: string }[];
 }
 
 export interface UpdateDoctorDto {
@@ -13,8 +12,7 @@ export interface UpdateDoctorDto {
   specialization?: string;
   gender?: string;
   location?: string;
-  email?: string;
   phone?: string;
-  availability?: string;
+  availability?: { day: string; startTime: string; endTime: string }[];
   status?: 'available' | 'busy' | 'off-duty';
 }

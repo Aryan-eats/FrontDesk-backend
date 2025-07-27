@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
 
 @Entity('users')
 export class UserEntity {
@@ -11,18 +11,12 @@ export class UserEntity {
   @Column()
   password: string;
 
-  @Column({ default: 'staff' })
+  @Column({ default: 'front-desk' })
   role: string;
 
-  @Column({ nullable: true })
-  email?: string;
-
-  @Column({ nullable: true })
-  fullName?: string;
+  @Column()
+  fullName: string;
 
   @CreateDateColumn()
   createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
 }

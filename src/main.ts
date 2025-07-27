@@ -2,46 +2,56 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
+import { VercelRequest, VercelResponse } from '@vercel/node';
+import { INestApplication } from '@nestjs/common';
+
+let app: INestApplication;
 
 async function bootstrap() {
+  if (!app) {
+    app = await NestFactory.create(AppModule, {
+      logger: ['error', 'warn'],
+    });
+    const configService = app.get(ConfigService);
+    
+    // Enable validation pipes
+    app.useGlobalPipes(new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }));
+    
+    // Enable CORS to allow frontend to connect
+    app.enableCors({
+      origin: [
+        'http://localhost:3001',
+        'https://allofront.vercel.app',
+        'https://frontdesk-sigma.vercel.app',
+        configService.get<string>('FRONTEND_URL', 'http://localhost:3001')
+      ],
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    });
+    
+    await app.init();
+  }
+  return app;
+}
+
+// For local development
+async function startLocal() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   
-  // Enable validation pipes
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
     forbidNonWhitelisted: true,
     transform: true,
   }));
   
-  // Enable CORS to allow frontend to connect
-  const allowedOrigins = [
-    'http://localhost:3001',
-    'https://allofront.vercel.app/',
-    configService.get<string>('FRONTEND_URL'),
-  ].filter(Boolean);
-
   app.enableCors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, etc.)
-      if (!origin) return callback(null, true);
-      
-      // Check if origin is allowed
-      if (allowedOrigins.some(allowedOrigin => 
-        allowedOrigin === origin || 
-        origin.endsWith('.vercel.app') ||
-        origin.includes('localhost')
-      )) {
-        return callback(null, true);
-      }
-      
-      // For production, be more permissive with Vercel apps
-      if (process.env.NODE_ENV === 'production' && origin.endsWith('.vercel.app')) {
-        return callback(null, true);
-      }
-      
-      return callback(null, true); // Be permissive for now
-    },
+    origin: configService.get<string>('FRONTEND_URL', 'http://localhost:3001'),
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -52,9 +62,22 @@ async function bootstrap() {
   console.log(`Backend server running on http://localhost:${port}`);
 }
 
-// For serverless deployment
-if (require.main === module) {
-  bootstrap();
+// Serverless handler for Vercel
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  try {
+    const app = await bootstrap();
+    const expressApp = app.getHttpAdapter().getInstance();
+    return expressApp(req, res);
+  } catch (error) {
+    console.error('Serverless function error:', error);
+    return res.status(500).json({ 
+      error: 'Internal Server Error',
+      message: error.message 
+    });
+  }
 }
 
-export default bootstrap;
+// For local development
+if (require.main === module) {
+  startLocal();
+}

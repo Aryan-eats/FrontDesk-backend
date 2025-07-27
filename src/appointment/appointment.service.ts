@@ -14,10 +14,8 @@ export class AppointmentService {
   ) {}
 
   async createAppointment(appointmentData: CreateAppointmentDto): Promise<AppointmentEntity> {
-    // Make sure doctor exists
     await this.doctorService.getDoctorById(appointmentData.doctorId);
     
-    // Check for time conflicts
     const appointmentTime = new Date(appointmentData.appointmentTime);
     const conflict = await this.checkTimeConflict(
       appointmentData.doctorId, 
@@ -55,7 +53,6 @@ export class AppointmentService {
   async updateAppointment(id: number, updates: UpdateAppointmentDto): Promise<AppointmentEntity> {
     const appointment = await this.getAppointmentById(id);
     
-    // Check for time conflicts if updating appointment time
     if (updates.appointmentTime) {
       const newTime = new Date(updates.appointmentTime);
       const conflict = await this.checkTimeConflict(
@@ -78,18 +75,14 @@ export class AppointmentService {
     await this.appointmentRepo.remove(appointment);
   }
 
-  async getAppointmentsByDoctor(doctorId: number): Promise<AppointmentEntity[]> {
-    return this.appointmentRepo.find({
-      where: { doctorId },
-      relations: ['doctor'],
-      order: { appointmentTime: 'ASC' }
-    });
-  }
-
-  async getAppointmentsByDateRange(startDate: Date, endDate: Date): Promise<AppointmentEntity[]> {
+  async getTodayAppointments(): Promise<AppointmentEntity[]> {
+    const today = new Date();
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+    
     return this.appointmentRepo.find({
       where: {
-        appointmentTime: Between(startDate, endDate)
+        appointmentTime: Between(startOfDay, endOfDay)
       },
       relations: ['doctor'],
       order: { appointmentTime: 'ASC' }
@@ -101,7 +94,6 @@ export class AppointmentService {
     appointmentTime: Date, 
     excludeId?: number
   ): Promise<AppointmentEntity | null> {
-    // 30 minute buffer to avoid conflicts
     const timeBuffer = 30 * 60 * 1000; 
     const startTime = new Date(appointmentTime.getTime() - timeBuffer);
     const endTime = new Date(appointmentTime.getTime() + timeBuffer);

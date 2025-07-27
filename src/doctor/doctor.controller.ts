@@ -10,13 +10,13 @@ import {
   HttpCode,
   HttpStatus,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { DoctorService } from './doctor.service';
 import { CreateDoctorDto, UpdateDoctorDto } from './dto/doctor.dto';
 import { AuthGuard } from '@nestjs/passport';
 
 @Controller('doctors')
-@UseGuards(AuthGuard('jwt'))
 export class DoctorController {
   constructor(private readonly doctorService: DoctorService) {}
 
@@ -27,7 +27,10 @@ export class DoctorController {
   }
 
   @Get()
-  findAll() {
+  findAll(@Query('specialization') specialization?: string, @Query('location') location?: string) {
+    if (specialization || location) {
+      return this.doctorService.searchDoctors(specialization, location);
+    }
     return this.doctorService.getAllDoctors();
   }
 
@@ -47,14 +50,6 @@ export class DoctorController {
     @Body() updateDoctorDto: UpdateDoctorDto
   ) {
     return this.doctorService.updateDoctor(id, updateDoctorDto);
-  }
-
-  @Patch(':id/status')
-  updateStatus(
-    @Param('id', ParseIntPipe) id: number,
-    @Body('status') status: 'available' | 'busy' | 'off-duty'
-  ) {
-    return this.doctorService.changeStatus(id, status);
   }
 
   @Delete(':id')

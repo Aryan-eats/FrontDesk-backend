@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Like } from 'typeorm';
 import { Doctor } from './doctor.entity/doctor.entity';
 import { CreateDoctorDto, UpdateDoctorDto } from './dto/doctor.dto';
 
@@ -23,10 +23,7 @@ export class DoctorService {
   }
 
   async getDoctorById(id: number): Promise<Doctor> {
-    const doctor = await this.doctorRepo.findOne({
-      where: { id },
-      relations: ['appointments', 'queueItems']
-    });
+    const doctor = await this.doctorRepo.findOne({ where: { id } });
     
     if (!doctor) {
       throw new NotFoundException(`Doctor with ID ${id} not found`);
@@ -37,8 +34,6 @@ export class DoctorService {
 
   async updateDoctor(id: number, updates: UpdateDoctorDto): Promise<Doctor> {
     const doctor = await this.getDoctorById(id);
-    
-    // Just merge the updates - TypeORM handles the rest
     Object.assign(doctor, updates);
     return this.doctorRepo.save(doctor);
   }
@@ -48,13 +43,26 @@ export class DoctorService {
     await this.doctorRepo.remove(doctor);
   }
 
-  async changeStatus(id: number, newStatus: 'available' | 'busy' | 'off-duty'): Promise<Doctor> {
-    return this.updateDoctor(id, { status: newStatus });
-  }
-
   async getAvailableDoctors(): Promise<Doctor[]> {
     return this.doctorRepo.find({
       where: { status: 'available' },
+      order: { name: 'ASC' }
+    });
+  }
+
+  async searchDoctors(specialization?: string, location?: string): Promise<Doctor[]> {
+    const where: any = {};
+    
+    if (specialization) {
+      where.specialization = Like(`%${specialization}%`);
+    }
+    
+    if (location) {
+      where.location = Like(`%${location}%`);
+    }
+    
+    return this.doctorRepo.find({
+      where,
       order: { name: 'ASC' }
     });
   }

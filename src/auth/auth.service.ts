@@ -7,7 +7,6 @@ import { UserEntity } from '../user/user.entity/user.entity';
 export interface SignUpDto {
   username: string;
   password: string;
-  email?: string;
   fullName?: string;
   role?: string;
 }
@@ -25,7 +24,7 @@ export class AuthService {
   ) {}
 
   async signUp(signUpDto: SignUpDto): Promise<{ user: Omit<UserEntity, 'password'>; accessToken: string }> {
-    const { username, password, email, fullName, role } = signUpDto;
+    const { username, password, fullName, role } = signUpDto;
     
     // Check if user already exists
     const existingUser = await this.userService.getUserByUsername(username);
@@ -44,7 +43,6 @@ export class AuthService {
       role: role || 'staff',
     };
     
-    if (email) userData.email = email;
     if (fullName) userData.fullName = fullName;
     
     const newUser = await this.userService.createUser(userData as UserEntity);

@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
 
 @Entity('doctors')
 export class Doctor {
@@ -18,26 +18,14 @@ export class Doctor {
   location: string;
 
   @Column({ nullable: true })
-  email: string;
-
-  @Column({ nullable: true })
   phone: string;
 
-  @Column('text', { nullable: true })
-  availability: string; // JSON string for schedule
+  @Column('simple-json', { nullable: true })
+  availability: { day: string; startTime: string; endTime: string }[];
 
   @Column({ default: 'available' })
   status: 'available' | 'busy' | 'off-duty';
 
-  @OneToMany('AppointmentEntity', 'doctor')
-  appointments: any[];
-
-  @OneToMany('QueueEntity', 'doctor')
-  queueItems: any[];
-
   @CreateDateColumn()
   createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
 }

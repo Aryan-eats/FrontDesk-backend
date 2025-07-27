@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
 import { Doctor } from '../../doctor/doctor.entity/doctor.entity';
 
 @Entity('queue')
@@ -16,15 +16,9 @@ export class QueueEntity {
   queueNumber: number;
 
   @Column({ default: 'waiting' })
-  status: 'waiting' | 'with-doctor' | 'completed' | 'canceled';
+  status: 'waiting' | 'with-doctor' | 'completed';
 
-  @Column({ default: 'normal' })
-  priority: 'normal' | 'urgent';
-
-  @Column({ nullable: true })
-  estimatedWaitTime: number; // in minutes
-
-  @ManyToOne(() => Doctor, doctor => doctor.queueItems, { eager: true })
+  @ManyToOne(() => Doctor, { eager: true })
   @JoinColumn({ name: 'doctorId' })
   doctor: Doctor;
 
@@ -33,7 +27,4 @@ export class QueueEntity {
 
   @CreateDateColumn()
   arrivalTime: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
 }

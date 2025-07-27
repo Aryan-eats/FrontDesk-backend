@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
 import { Doctor } from '../../doctor/doctor.entity/doctor.entity';
 
 @Entity('appointments')
@@ -10,21 +10,15 @@ export class AppointmentEntity {
   patientName: string;
 
   @Column({ nullable: true })
-  patientEmail: string;
-
-  @Column({ nullable: true })
   patientPhone: string;
 
   @Column()
   appointmentTime: Date;
 
   @Column({ default: 'booked' })
-  status: 'booked' | 'completed' | 'canceled' | 'in-progress';
+  status: 'booked' | 'completed' | 'canceled';
 
-  @Column({ nullable: true })
-  notes: string;
-
-  @ManyToOne(() => Doctor, doctor => doctor.appointments, { eager: true })
+  @ManyToOne(() => Doctor, { eager: true })
   @JoinColumn({ name: 'doctorId' })
   doctor: Doctor;
 
@@ -33,7 +27,4 @@ export class AppointmentEntity {
 
   @CreateDateColumn()
   createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
 }

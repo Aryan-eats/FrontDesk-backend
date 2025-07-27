@@ -27,18 +27,20 @@ import { QueueModule } from './queue/queue.module';
         password: configService.get<string>('DB_PASSWORD', ''),
         database: configService.get<string>('DB_DATABASE', 'front_desk'),
         entities: [join(__dirname, '**', '*.entity.{ts,js}')],
-        synchronize: configService.get<string>('NODE_ENV') !== 'production',
+        synchronize: false, // Always false for safety
         autoLoadEntities: true,
-        logging: configService.get<string>('NODE_ENV') === 'development',
-        // Add connection pool and timeout settings for Railway
+        logging: false, // Disable logging for performance
+        // Optimized for serverless
         extra: {
-          connectionLimit: 10,
-          acquireTimeout: 60000,
-          timeout: 60000,
-          reconnect: true,
+          connectionLimit: 5,
+          acquireTimeout: 30000,
+          timeout: 30000,
+          timezone: 'Z',
         },
-        // Ensure SSL for Railway
+        // Enable SSL for Railway in production
         ssl: configService.get<string>('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
+        // Keep connections alive
+        keepConnectionAlive: true,
       }),
     }),
     AuthModule,

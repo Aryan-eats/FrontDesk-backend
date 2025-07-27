@@ -10,14 +10,12 @@ import {
   HttpCode,
   HttpStatus,
   ParseIntPipe,
-  Query,
 } from '@nestjs/common';
 import { AppointmentService } from './appointment.service';
 import { CreateAppointmentDto, UpdateAppointmentDto } from './dto/appointment.dto';
 import { AuthGuard } from '@nestjs/passport';
 
 @Controller('appointments')
-@UseGuards(AuthGuard('jwt'))
 export class AppointmentController {
   constructor(private readonly appointmentService: AppointmentService) {}
 
@@ -28,23 +26,13 @@ export class AppointmentController {
   }
 
   @Get()
-  findAll(
-    @Query('doctorId') doctorId?: string,
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-  ) {
-    if (doctorId) {
-      return this.appointmentService.getAppointmentsByDoctor(+doctorId);
-    }
-    
-    if (startDate && endDate) {
-      return this.appointmentService.getAppointmentsByDateRange(
-        new Date(startDate),
-        new Date(endDate)
-      );
-    }
-    
+  findAll() {
     return this.appointmentService.getAllAppointments();
+  }
+
+  @Get('today')
+  getTodayAppointments() {
+    return this.appointmentService.getTodayAppointments();
   }
 
   @Get(':id')
